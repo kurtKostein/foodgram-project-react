@@ -27,21 +27,21 @@ class CustomUserManager(BaseUserManager):
         return user
 
     def create_user(
-            self, first_name, last_name, login, email, password, **kwargs
+            self, first_name, last_name, login, email, password=None, **kwargs
     ):
         kwargs.setdefault('is_staff', False)
         kwargs.setdefault('is_superuser', False)
         return self._create_user(
-            self, first_name, last_name, login, email, password, **kwargs
+            first_name, last_name, login, email, password, **kwargs
         )
 
     def create_superuser(
-            self, first_name, last_name, login, email, password, **kwargs
+            self, first_name, last_name, login, email, password=None, **kwargs
     ):
         kwargs.setdefault('is_staff', True)
         kwargs.setdefault('is_superuser', True)
         return self._create_user(
-            self, first_name, last_name, login, email, password, **kwargs
+            first_name, last_name, login, email, password, **kwargs
         )
 
 
@@ -61,8 +61,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     object = CustomUserManager()
 
-    USERNAME_FIELD = email
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'login', 'email', 'password']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'login', 'password']
 
     def get_full_name(self):
         return f'{self.first_name} {self.last_name}'
