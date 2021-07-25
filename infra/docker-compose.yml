@@ -31,6 +31,7 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
+    command: gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000
     restart: always
     volumes:
       - static_value:/code/static/
