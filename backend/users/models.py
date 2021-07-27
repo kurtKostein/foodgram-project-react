@@ -48,9 +48,9 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    first_name = models.CharField(max_length=25, verbose_name='Имя')
-    last_name = models.CharField(max_length=25, verbose_name='Фамилия')
-    username = models.CharField(max_length=25, verbose_name='Имя пользователя')
+    first_name = models.CharField(max_length=150, verbose_name='Имя')
+    last_name = models.CharField(max_length=150, verbose_name='Фамилия')
+    username = models.CharField(max_length=150, verbose_name='Имя пользователя')
     email = models.EmailField(
         max_length=255,
         verbose_name='Адрес элетронной почты',
