@@ -1,4 +1,5 @@
 #  users/models.py
+from django.contrib import admin
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser, PermissionsMixin
 )
@@ -66,5 +67,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'username', 'password']
 
+    @admin.display(
+        description='Имя Фамилия'
+    )
     def get_full_name(self):
         return f'{self.first_name} {self.last_name}'
