@@ -77,3 +77,4 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         verbose_name = 'Автор рецепта'
+        verbose_name_plural = 'Авторы рецептов'
