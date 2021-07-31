@@ -4,6 +4,7 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.utils import timezone
+from django.core.validators import EmailValidator
 
 
 class CustomUserManager(BaseUserManager):
@@ -50,11 +51,16 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=150, verbose_name='Имя')
     last_name = models.CharField(max_length=150, verbose_name='Фамилия')
-    username = models.CharField(max_length=150, verbose_name='Имя пользователя')
+    username = models.CharField(
+        verbose_name='Имя пользователя',
+        max_length=150,
+        unique=True,
+    )
     email = models.EmailField(
-        max_length=255,
+        max_length=254,
         verbose_name='Адрес элетронной почты',
-        unique=True
+        unique=True,
+        validators=[EmailValidator()]
     )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -68,3 +74,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
+
+    class Meta:
+        verbose_name = 'Автор рецепта'
