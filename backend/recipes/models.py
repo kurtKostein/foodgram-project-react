@@ -1,6 +1,6 @@
 # recipes/models.py
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 
 from users.models import CustomUser
 
@@ -22,8 +22,8 @@ class Ingredient(BaseRecipeClass):
     )
 
     class Meta:
-        verbose_name = 'Ингридиент'
-        verbose_name_plural = 'Ингридиенты'
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
 
 
 class Tag(BaseRecipeClass):
@@ -39,13 +39,15 @@ class Recipe(BaseRecipeClass):
     author = models.ForeignKey(
         CustomUser,
         verbose_name='Автор рецепта',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='recipes',
     )
     ingredients = models.ManyToManyField(
         to='Ingredient',
         through='RecipeIngredients',
+        related_name='recipes'
     )
-    tags = models.ManyToManyField(to='Tag', related_name='recipe_tag')
+    tags = models.ManyToManyField(to='Tag', related_name='recipes')
     image = models.ImageField(upload_to='media/', verbose_name='Изображение')
     text = models.TextField(verbose_name='Описание рецепта')
     cooking_time = models.PositiveSmallIntegerField(
@@ -75,13 +77,27 @@ Recipe._meta.get_field('name').verbose_name = 'Название рецепта'
 
 
 class Favorite(models.Model):
-    ...
+    subscriber = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(to='Recipe', on_delete=models.CASCADE)
 
 
 class ShoppingCart(models.Model):
-    ...
+    subscriber = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(to='Recipe', on_delete=models.CASCADE)
 
 
 class Follow(models.Model):
-    ...
-
+    subscriber = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='subscriber',
+        null=False,
+        blank=True
+    )
+    following = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='following',
+        null=False,
+        blank=False
+    )
