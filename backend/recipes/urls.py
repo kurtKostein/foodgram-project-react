@@ -1,7 +1,12 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-from .models import *
+from .views import *
+
+router = DefaultRouter()
+
+router.register('ingredients', IngredientViewSet, 'ingredients')
 
 urlpatterns = [
-
+    path('', include(router.urls))
 ]
