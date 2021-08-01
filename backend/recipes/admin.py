@@ -10,7 +10,8 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'measurement_unit')
+    search_fields = ('name',)
 
 
 @admin.register(Tag)
