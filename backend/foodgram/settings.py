@@ -7,7 +7,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'DEFAULT')
 
 DEBUG = os.environ.get('DEBUG', True)
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split()
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -17,10 +17,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'users.apps.UsersConfig',
+
     'rest_framework',
     'rest_framework.authtoken',
-    'django_filters',
     'djoser',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -107,6 +109,7 @@ DJOSER = {
     }
 }
 
+AUTH_USER_MODEL = 'users.CustomUser'
 
 LANGUAGE_CODE = 'ru-RU'
 
