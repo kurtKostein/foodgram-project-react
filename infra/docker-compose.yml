@@ -38,7 +38,7 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
       - ../docs/openapi-schema.yml:/usr/share/nginx/html/api/docs/openapi-schema.yml
-      - static_value:/code/static/
+      - static_value:/var/html/static/
       - media_value:/code/media/
       - sent_emails_value:/code/sent_emails
     depends_on:
