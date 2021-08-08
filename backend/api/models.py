@@ -1,6 +1,8 @@
 #  api/models.py
 from django.db import models
 
+from colorfield.fields import ColorField
+
 
 class BaseRecipeClass(models.Model):
     name = models.CharField(max_length=200)
@@ -21,3 +23,12 @@ class Ingredient(BaseRecipeClass):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+
+
+class Tag(BaseRecipeClass):
+    colorfield = ColorField('Цвет тэга', default='#3399FF', null=True)
+    slug = models.CharField('Слаг', max_length=200, unique=True, null=True)
+
+    class Meta:
+        verbose_name = 'Тэг'
+        verbose_name_plural = 'Тэги'
