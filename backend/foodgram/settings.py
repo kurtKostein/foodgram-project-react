@@ -23,8 +23,8 @@ INSTALLED_APPS = [
     'django_filters',
     'colorfield',
 
-    'users',
-    'api',
+    'users.apps.UsersConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
