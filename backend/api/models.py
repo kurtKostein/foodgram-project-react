@@ -26,9 +26,13 @@ class Ingredient(BaseRecipeClass):
 
 
 class Tag(BaseRecipeClass):
-    colorfield = ColorField('Цвет тэга', default='#3399FF', null=True)
+    color = ColorField('Цвет тэга', default='#3399FF', null=True)
     slug = models.CharField('Слаг', max_length=200, unique=True, null=True)
 
     class Meta:
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
+
+
+class Recipe(BaseRecipeClass):
+    ...
