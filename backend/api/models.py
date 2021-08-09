@@ -71,3 +71,16 @@ class RecipeIngredients(models.Model):
         default=1,
         validators=[MinValueValidator(1)]
     )
+
+
+class FavoriteRecipe(models.Model):
+    user = models.ForeignKey(
+        to='CustomUser',
+        on_delete=models.CASCADE,
+        related_name='favorites'
+    )
+    recipe = models.ForeignKey(
+        to='Recipe',
+        on_delete=models.CASCADE,
+        related_name='favorites'
+    )

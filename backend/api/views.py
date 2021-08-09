@@ -1,11 +1,15 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.generics import get_object_or_404
 
-from .models import Ingredient, Tag, Recipe
-from .serializers import (IngredientSerializer,
-                          TagSerializer,
-                          RecipeSerializer,
-                          RecipeIngredientSerializer)
+
+from .models import Ingredient, Tag, Recipe, FavoriteRecipe
+from .serializers import (
+    IngredientSerializer,
+    TagSerializer,
+    RecipeSerializer,
+    RecipeIngredientSerializer,
+    FavoriteRecipeSerializer
+)
 from .permissions import IsAuthorOrAdminOrReadOnly
 
 
@@ -41,3 +45,12 @@ class RecipeIngredientsViewSet(viewsets.ModelViewSet):
                 Recipe, pk=self.kwargs.get('recipe_id')
             )
         )
+
+
+class CreateDestroyViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin):
+    pass
+
+
+class FavoriteRecipeViewSet(CreateDestroyViewSet):
+    queryset = FavoriteRecipe.objects.all()
+    serializer_class = FavoriteRecipeSerializer
