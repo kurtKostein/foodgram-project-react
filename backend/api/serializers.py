@@ -20,6 +20,15 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     ingredients = IngredientSerializer(many=True)
     tags = TagSerializer(many=True)
+    is_favorited = serializers.SerializerMethodField()
+
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        user = request.user
+        recipe = obj
+        return (
+            FavoriteRecipe.objects.filter(user=user, recipe=recipe).exists()
+        )
 
     class Meta:
         model = Recipe
