@@ -75,12 +75,13 @@ class RecipeIngredients(models.Model):
 
 class FavoriteRecipe(models.Model):
     user = models.ForeignKey(
-        to='CustomUser',
+        to='users.CustomUser',
         on_delete=models.CASCADE,
         related_name='favorites'
     )
     recipe = models.ForeignKey(
         to='Recipe',
-        on_delete=models.CASCADE,
+        null=True,
+        on_delete=models.SET_NULL,
         related_name='favorites'
     )
