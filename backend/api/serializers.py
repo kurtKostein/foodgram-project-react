@@ -13,7 +13,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ('name', 'color', 'slug')
+        fields = '__all__'
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -35,6 +35,19 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    ingredients = IngredientSerializer(many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
+
+    class Meta:
+        fields = ('id', 'tags', 'author', 'ingredients',
+                  'name', 'image', 'text', 'cooking_time')
+
+
 class RecipeForFavoritesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
@@ -49,7 +62,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
     user = serializers.RelatedField(read_only=True)
-    recipe = RecipeForFavoritesSerializer(many=True)
+    recipe = RecipeForFavoritesSerializer()
 
     class Meta:
         model = FavoriteRecipe
