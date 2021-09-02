@@ -1,4 +1,4 @@
-from rest_framework import viewsets, mixins, permissions, status
+from rest_framework import viewsets, mixins, permissions, status, response
 from rest_framework.generics import get_object_or_404
 
 
@@ -9,6 +9,7 @@ from .serializers import (
     RecipeSerializer,
     RecipeIngredientSerializer,
     CreateUpdateRecipeSerializer,
+    FavoriteRecipeSerializer,
 )
 from .permissions import IsAuthorOrAdminOrReadOnly
 
@@ -62,3 +63,25 @@ class CreateDestroyViewSet(
     viewsets.GenericViewSet
 ):
     pass
+
+
+class FavoriteViewSet(CreateDestroyViewSet):
+    pagination_class = None
+    serializer_class = FavoriteRecipeSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.favorites.all()
+
+    def create(self, request, *args, **kwargs):
+        recipe = self.kwargs.get('recipe_id')
+        user = self.request.user.id
+        data = {'user': user, 'recipe': recipe}
+        serializer = FavoriteRecipeSerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return response.Response(serializer.data, status.HTTP_201_CREATED, headers=headers)
+
+    def destroy(self, request, *args, **kwargs):
+        ...
