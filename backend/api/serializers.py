@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Ingredient, Tag, Recipe, RecipeIngredients, FavoriteRecipe
+from .models import Ingredient, Tag, Recipe, RecipeIngredients, FavoriteRecipe, CustomUser
 from djoser.serializers import UserSerializer
 
 
@@ -61,8 +61,8 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
-    user = serializers.RelatedField(read_only=True)
-    recipe = RecipeForFavoritesSerializer()
+    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
 
     class Meta:
         model = FavoriteRecipe
