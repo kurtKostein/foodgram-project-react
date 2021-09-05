@@ -10,18 +10,6 @@ from .serializers import (CreateUpdateRecipeSerializer,
                           TagSerializer)
 
 
-class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
-
-
-class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    pagination_class = None
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-    permission_classes = (permissions.AllowAny,)
-
-
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (permissions.IsAuthenticated,)
@@ -33,6 +21,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    pagination_class = None
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = (permissions.AllowAny,)
 
 
 class RecipeIngredientsViewSet(viewsets.ModelViewSet):
