@@ -85,3 +85,11 @@ class FavoriteRecipe(models.Model):
         on_delete=models.SET_NULL,
         related_name='favorites'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_RecipeFavorite'
+            )
+        ]
