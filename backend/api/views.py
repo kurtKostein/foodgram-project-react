@@ -2,7 +2,7 @@ from rest_framework import mixins, permissions, response, status, viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 
-from .models import Ingredient, Recipe, Tag
+from .models import FavoriteRecipe, Ingredient, Recipe, Tag
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateUpdateRecipeSerializer,
                           FavoriteRecipeSerializer, IngredientSerializer,
@@ -94,10 +94,14 @@ class FavoriteAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, recipe_id):
-        data = {
-            'recipe': recipe_id,
-            'user': self.request.user.id
-        }
+        user = self.request.user
+        data = {'recipe': recipe_id, 'user': user.id}
+
+        if FavoriteRecipe.objects.filter(user=user, recipe=recipe_id).exists():
+            return response.Response(
+                "Ошибка: Рецепт уже добавлен", status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = FavoriteRecipeSerializer(
             data=data, context={'request': request}
         )
