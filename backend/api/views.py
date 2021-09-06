@@ -2,6 +2,8 @@ from rest_framework import mixins, permissions, response, status, viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 
+from django_filters import rest_framework as filters
+
 from .models import FavoriteRecipe, Ingredient, Recipe, Tag
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateUpdateRecipeSerializer,
@@ -24,8 +26,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        name = self.request.query_params.get('name', None)
+
+        if name:
+            queryset = Ingredient.objects.filter(
+                name__istartswith=name
+            ).distinct('name')
+        else:
+            queryset = Ingredient.objects.all()
+
+        return queryset
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -45,12 +59,8 @@ class RecipeIngredientsViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
         return recipe.ingredients.all()
 
-    def perform_create(self, serializer):
-        serializer.save(
-            recipe=get_object_or_404(
-                Recipe, pk=self.kwargs.get('recipe_id')
-            )
-        )
+    def perform_create(self, serializer):  # TODO bulk create?
+        ...
 
 
 class CreateDestroyViewSet(
@@ -61,8 +71,8 @@ class CreateDestroyViewSet(
     pass
 
 
-class FavoriteViewSet(CreateDestroyViewSet):  # Todo delete if apiview will be stayed
-    pagination_class = None
+class FavoriteViewSet(CreateDestroyViewSet):  # Todo delete if apiview
+    pagination_class = None                   # will be stayed
     serializer_class = FavoriteRecipeSerializer
 
     def get_queryset(self):
