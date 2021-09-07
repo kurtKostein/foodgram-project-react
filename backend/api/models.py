@@ -73,23 +73,38 @@ class RecipeIngredients(models.Model):
     )
 
 
-class FavoriteRecipe(models.Model):
+class UserRecipeRelations(models.Model):
+    """
+    Base class for Favorite and ShoppingCart models
+    """
     user = models.ForeignKey(
         to='users.CustomUser',
+        verbose_name='Пользователь',
         on_delete=models.CASCADE,
-        related_name='favorites'
     )
     recipe = models.ForeignKey(
         to='Recipe',
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name='favorites'
+        verbose_name='Рецепт',
+        on_delete=models.CASCADE,
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='unique_RecipeFavorite'
+                name='%(app_label)s_%(class)s_is_unique'
             )
         ]
+        abstract = True
+
+
+class FavoriteRecipe(UserRecipeRelations):
+
+    class Meta:
+        default_related_name = 'favorites'
+
+
+class ShoppingCart(UserRecipeRelations):
+
+    class Meta:
+        default_related_name = 'shopping_cart'
