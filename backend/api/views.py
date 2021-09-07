@@ -2,22 +2,32 @@ from rest_framework import mixins, permissions, response, status, viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 
-from django_filters import rest_framework as filters
-
-from .models import FavoriteRecipe, Ingredient, Recipe, Tag
+from .models import FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateUpdateRecipeSerializer,
                           FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeIngredientSerializer, RecipeSerializer,
-                          TagSerializer)
+                          ShoppingCartSerializer, TagSerializer)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
+    # queryset = Recipe.objects.all()
     permission_classes = (permissions.IsAuthenticated,)
 
+    def get_queryset(self):
+        user = self.request.user
+        is_in_shopping_cart = self.request.query_params.get(
+            'is_in_shopping_cart',
+        )
+
+        if is_in_shopping_cart:
+            queryset = user.shopping_cart.all()
+        else:
+            queryset = Recipe.objects.all()
+        return queryset
+
     def get_serializer_class(self):
-        if self.action in ['update', 'retrieve']:
+        if self.action in ['update', 'create']:
             return CreateUpdateRecipeSerializer
         return RecipeSerializer
 
@@ -55,7 +65,7 @@ class RecipeIngredientsViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
 
     def get_queryset(self):
-        pk = self.kwargs.get('review_id', )
+        pk = self.kwargs.get('recipe_id', )
         recipe = get_object_or_404(Recipe, pk=pk)
         return recipe.ingredients.all()
 
@@ -123,5 +133,31 @@ class FavoriteAPIView(APIView):
         user = self.request.user
         favorite = get_object_or_404(user.favorites, recipe=recipe_id)
         favorite.delete()
-        # recipe_id = self.kwargs.get('recipe_id')
+        return response.Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ShoppingCartAPIView(APIView):  # TODO thinking about union with favorite
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, recipe_id):
+        user = self.request.user
+        data = {'recipe': recipe_id, 'user': user.id}
+
+        if ShoppingCart.objects.filter(user=user, recipe=recipe_id).exists():
+            return response.Response(
+                "Ошибка: Рецепт уже добавлен в список покупок",
+                status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = ShoppingCartSerializer(
+            data=data, context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return response.Response(serializer.data, status.HTTP_201_CREATED)
+
+    def delete(self, request, recipe_id):
+        user = self.request.user
+        shopping_cart = get_object_or_404(user.shopping_cart, recipe=recipe_id)
+        shopping_cart.delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
