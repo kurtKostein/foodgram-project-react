@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import Ingredient, Tag, Recipe, RecipeIngredients, FavoriteRecipe, CustomUser
+from .models import Ingredient, ShoppingCart, Tag, Recipe, RecipeIngredients, \
+    FavoriteRecipe, CustomUser
 from djoser.serializers import UserSerializer
 
 
@@ -21,13 +22,22 @@ class RecipeSerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True)
     tags = TagSerializer(many=True)
     is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
-    def get_is_favorited(self, obj):
+    def get_is_favorited(self, obj) -> bool:
         request = self.context.get('request')
         user = request.user
         recipe = obj
         return (
             FavoriteRecipe.objects.filter(user=user, recipe=recipe).exists()
+        )
+
+    def get_is_in_shopping_cart(self, obj) -> bool:
+        request = self.context.get('request')
+        user = request.user
+        recipe = obj
+        return (
+            ShoppingCart.objects.filter(user=user, recipe=recipe).exists()
         )
 
     class Meta:
@@ -44,6 +54,7 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients',
                   'name', 'image', 'text', 'cooking_time')
 
@@ -66,4 +77,13 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FavoriteRecipe
+        fields = '__all__'
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+
+    class Meta:
+        model = ShoppingCart
         fields = '__all__'
