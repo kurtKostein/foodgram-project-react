@@ -1,6 +1,7 @@
 from rest_framework import mixins, permissions, response, status, viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
+from django_filters import rest_framework as filters
 
 from .models import FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import IsAuthorOrAdminOrReadOnly
@@ -10,20 +11,32 @@ from .serializers import (CreateUpdateRecipeSerializer,
                           ShoppingCartSerializer, TagSerializer)
 
 
+class TagFilter(filters.FilterSet):  # Todo temporary here
+    tags = filters.AllValuesMultipleFilter(
+        field_name='tags__slug',
+    )
+
+
 class RecipeViewSet(viewsets.ModelViewSet):
-    # queryset = Recipe.objects.all()
     permission_classes = (permissions.IsAuthenticated,)
+    filter_class = TagFilter
 
     def get_queryset(self):
+        queryset = Recipe.objects.all()
         user = self.request.user
-        is_in_shopping_cart = self.request.query_params.get(
-            'is_in_shopping_cart',
-        )
 
+        is_in_shopping_cart = self.request.query_params.get(
+            'is_in_shopping_cart'
+        )
+        is_favorited = self.request.query_params.get('is_favorited')
+        author = self.request.query_params.get('author')
+
+        if author:
+            queryset = queryset.filter(author__recipes=author)
         if is_in_shopping_cart:
-            queryset = user.shopping_cart.all()
-        else:
-            queryset = Recipe.objects.all()
+            queryset = queryset.filter(shopping_cart__user=user)
+        if is_favorited:
+            queryset = queryset.filter(favorites__user=user)
         return queryset
 
     def get_serializer_class(self):
@@ -41,13 +54,12 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         name = self.request.query_params.get('name', None)
+        queryset = Ingredient.objects.all()
 
         if name:
-            queryset = Ingredient.objects.filter(
+            queryset = queryset.filter(
                 name__istartswith=name
             ).distinct('name')
-        else:
-            queryset = Ingredient.objects.all()
 
         return queryset
 
