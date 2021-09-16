@@ -4,6 +4,7 @@ from django.db import models
 
 from colorfield.fields import ColorField
 
+from foodgram import settings
 from users.models import CustomUser
 
 
@@ -50,7 +51,10 @@ class Recipe(BaseRecipeClass):
         related_name='recipes'
     )
     tags = models.ManyToManyField(to='Tag', related_name='recipes')
-    image = models.ImageField(upload_to='media/', verbose_name='Изображение')
+    image = models.ImageField(
+        'Изображение',
+        upload_to=settings.MEDIA_ROOT
+    )
     text = models.TextField(verbose_name='Описание рецепта')
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления (в минутах)',
