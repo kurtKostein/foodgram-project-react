@@ -53,7 +53,7 @@ class Recipe(BaseRecipeClass):
     tags = models.ManyToManyField(to='Tag', related_name='recipes')
     image = models.ImageField(
         'Изображение',
-        upload_to=settings.MEDIA_ROOT
+        upload_to='media'
     )
     text = models.TextField(verbose_name='Описание рецепта')
     cooking_time = models.PositiveSmallIntegerField(
