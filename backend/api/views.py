@@ -7,7 +7,7 @@ from .models import FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateUpdateRecipeSerializer,
                           FavoriteRecipeSerializer, IngredientSerializer,
-                          RecipeIngredientSerializer, RecipeSerializer,
+                          RecipeIngredientsSerializer, RecipeSerializer,
                           ShoppingCartSerializer, TagSerializer)
 
 
@@ -44,9 +44,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return CreateUpdateRecipeSerializer
         return RecipeSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
@@ -72,7 +69,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeIngredientsViewSet(viewsets.ModelViewSet):
-    serializer_class = RecipeIngredientSerializer
+    serializer_class = RecipeIngredientsSerializer
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
     search_fields = ('name',)
 
@@ -80,9 +77,6 @@ class RecipeIngredientsViewSet(viewsets.ModelViewSet):
         pk = self.kwargs.get('recipe_id', )
         recipe = get_object_or_404(Recipe, pk=pk)
         return recipe.ingredients.all()
-
-    def perform_create(self, serializer):  # TODO bulk create?
-        ...
 
 
 class CreateDestroyViewSet(
