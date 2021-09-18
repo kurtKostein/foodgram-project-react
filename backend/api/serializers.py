@@ -1,5 +1,8 @@
 from rest_framework import serializers
 
+from drf_extra_fields.fields import Base64ImageField
+from rest_framework.generics import get_object_or_404
+
 from .models import Ingredient, ShoppingCart, Tag, Recipe, RecipeIngredients, \
     FavoriteRecipe, CustomUser
 from djoser.serializers import UserSerializer
@@ -19,10 +22,11 @@ class TagSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
-    ingredients = IngredientSerializer(many=True)
-    tags = TagSerializer(many=True)
+    ingredients = IngredientSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
+    image = Base64ImageField()
 
     def get_is_favorited(self, obj) -> bool:
         request = self.context.get('request')
@@ -42,38 +46,65 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = '__all__'
+        fields = (
+            'name', 'author', 'ingredients', 'tags', 'image', 'text',
+            'cooking_time', 'is_favorited', 'is_in_shopping_cart',
+        )
+
+
+class RecipeIngredientsSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
+
+    class Meta:
+        model = RecipeIngredients
+        fields = ('id', 'amount')
 
 
 class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
-    ingredients = IngredientSerializer(many=True)
+    ingredients = RecipeIngredientsSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
     )
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients',
                   'name', 'image', 'text', 'cooking_time')
 
+    def create(self, validated_data):
+        tags = validated_data.pop('tags')
+        author = self.context.get('request').user
+        ingredients = validated_data.pop('ingredients')
 
-class RecipeForFavoritesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time',)
+        recipe = Recipe.objects.create(
+            author=author, **validated_data)
+        recipe.tags.set(tags)
+
+        for ingredient in ingredients:
+            curr_ing = get_object_or_404(Ingredient, id=ingredient['id'])
+            RecipeIngredients.objects.create(
+                recipe=recipe, ingredient=curr_ing, amount=ingredient['amount']
+            )
+
+        return recipe
 
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RecipeIngredients
-        fields = '__all__'
+# class RecipeForFavoritesSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Recipe
+#         fields = ('id', 'name', 'image', 'cooking_time',)
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all()
+    )
+    recipe = serializers.PrimaryKeyRelatedField(
+        queryset=Recipe.objects.all()
+    )
 
     class Meta:
         model = FavoriteRecipe
@@ -81,8 +112,12 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all()
+    )
+    recipe = serializers.PrimaryKeyRelatedField(
+        queryset=Recipe.objects.all()
+    )
 
     class Meta:
         model = ShoppingCart
