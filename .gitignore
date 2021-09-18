@@ -133,3 +133,5 @@ dmypy.json
 
 #Django
 backend/static
+#Fixtures
+fixtures/
