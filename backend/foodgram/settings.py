@@ -107,8 +107,11 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
     'PERMISSIONS': {
         'user': ['djoser.permissions.CurrentUserOrAdmin'],
-        'user_list': ['rest_framework.permissions.AllowAny']
-    }
+        'user_list': ['rest_framework.permissions.AllowAny'],
+    },
+    'SERIALIZERS': {
+        'current_user': 'api.serializers.CustomUserSerializer',
+    },
 }
 
 AUTH_USER_MODEL = 'users.CustomUser'

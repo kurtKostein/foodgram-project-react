@@ -1,13 +1,29 @@
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework.generics import get_object_or_404
+from djoser.serializers import UserSerializer
 
 from .models import (
     Ingredient, ShoppingCart, Tag, Recipe, RecipeIngredients, FavoriteRecipe,
     CustomUser
 )
-from djoser.serializers import UserSerializer
+
+
+class CustomUserSerializer(UserSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+
+    def get_is_subscribed(self, obj) -> bool:
+        # request = self.context.get('request')
+        user = obj
+        return False
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            'email', 'id', 'username',
+            'first_name', 'last_name', 'is_subscribed'
+        )
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -23,7 +39,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = CustomUserSerializer(read_only=True)
     ingredients = IngredientSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
