@@ -3,8 +3,10 @@ from rest_framework import serializers
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.generics import get_object_or_404
 
-from .models import Ingredient, ShoppingCart, Tag, Recipe, RecipeIngredients, \
-    FavoriteRecipe, CustomUser
+from .models import (
+    Ingredient, ShoppingCart, Tag, Recipe, RecipeIngredients, FavoriteRecipe,
+    CustomUser
+)
 from djoser.serializers import UserSerializer
 
 
@@ -47,7 +49,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'name', 'author', 'ingredients', 'tags', 'image', 'text',
+            'id', 'name', 'author', 'ingredients', 'tags', 'image', 'text',
             'cooking_time', 'is_favorited', 'is_in_shopping_cart',
         )
 
