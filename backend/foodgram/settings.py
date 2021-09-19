@@ -107,7 +107,7 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
     'PERMISSIONS': {
         'user': ['djoser.permissions.CurrentUserOrAdmin'],
-        'user_list': ['djoser.permissions.CurrentUserOrAdminOrReadOnly']
+        'user_list': ['rest_framework.permissions.AllowAny']
     }
 }
 
