@@ -110,10 +110,10 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
         return recipe
 
 
-# class RecipeForFavoritesSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Recipe
-#         fields = ('id', 'name', 'image', 'cooking_time',)
+class RecipeForFavoritesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time',)
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
@@ -123,10 +123,20 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     recipe = serializers.PrimaryKeyRelatedField(
         queryset=Recipe.objects.all()
     )
+    # recipe = RecipeForFavoritesSerializer()
 
     class Meta:
         model = FavoriteRecipe
         fields = '__all__'
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        return {
+            'id': instance.recipe.id,
+            'name': instance.recipe.name,
+            'image': request.build_absolute_uri(instance.recipe.image),
+            'cooking_time': instance.recipe.cooking_time
+        }
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
