@@ -6,17 +6,19 @@ from djoser.serializers import UserSerializer
 
 from .models import (
     Ingredient, ShoppingCart, Tag, Recipe, RecipeIngredients, FavoriteRecipe,
-    CustomUser
+    CustomUser, Subscription,
 )
 
 
 class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
-    def get_is_subscribed(self, obj) -> bool:
-        # request = self.context.get('request')
-        user = obj
-        return False
+    def get_is_subscribed(self, obj) -> bool:  # TODO
+        subscriber = self.context['request'].user
+        author = obj.id
+        is_subscribed = Subscription.objects.filter(
+            subscriber_id=subscriber.id, author_id=author).exists()
+        return is_subscribed
 
     class Meta:
         model = CustomUser
@@ -110,10 +112,16 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
         return recipe
 
 
-class RecipeForFavoritesSerializer(serializers.ModelSerializer):
+class RecipeMinifiedSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField(method_name='get_image')
+
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time',)
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        return request.build_absolute_uri(obj.image.url)
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
@@ -123,7 +131,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     recipe = serializers.PrimaryKeyRelatedField(
         queryset=Recipe.objects.all()
     )
-    # recipe = RecipeForFavoritesSerializer()
+    # recipe = RecipeMinifiedSerializer()
 
     class Meta:
         model = FavoriteRecipe
@@ -131,12 +139,11 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         request = self.context.get('request')
-        return {
-            'id': instance.recipe.id,
-            'name': instance.recipe.name,
-            'image': request.build_absolute_uri(instance.recipe.image),
-            'cooking_time': instance.recipe.cooking_time
-        }
+        recipes = RecipeMinifiedSerializer(
+            instance.recipe,
+            context={'request': request}
+        )
+        return recipes.data
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
@@ -150,3 +157,46 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = '__all__'
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        recipes = RecipeMinifiedSerializer(
+            instance.recipe,
+            context={'request': request}
+        )
+        return recipes.data
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    subscriber = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all()
+    )
+    author = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all()
+    )
+
+    class Meta:
+        model = Subscription
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        author = CustomUserSerializer(
+            instance.author, context={'request': request}
+        )
+        recipes = RecipeMinifiedSerializer(
+            many=True,
+            instance=instance.author.recipes.all(),
+            context={'request': request}
+        )
+        # recipes_count = serializers.SerializerMethodField()
+        #
+        # def get_recipes_count():
+        #     return author
+        recipes_count = instance.author.recipes.count()
+
+        return {
+            **author.data,
+            'recipes': recipes.data,
+            'recipes_count': recipes_count
+        }
