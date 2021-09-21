@@ -112,3 +112,22 @@ class ShoppingCart(UserRecipeRelations):
 
     class Meta:
         default_related_name = 'shopping_cart'
+
+
+class Subscription(models.Model):
+    subscriber = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='subscribers'  # TODO check naming!
+    )
+    author = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='subscribing'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['subscriber', 'author'],
+                                    name='unique_subscriptions')
+        ]
