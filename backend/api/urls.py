@@ -3,7 +3,7 @@ from rest_framework import routers
 
 from .views import (IngredientViewSet, RecipeViewSet,
                     ShoppingCartAPIView, TagViewSet, FavoriteViewSet,
-                    FavoriteAPIView)
+                    FavoriteAPIView, SubscribeAPIView)
 
 router = routers.DefaultRouter()
 router.register('ingredients', IngredientViewSet, basename='ingredients')
@@ -24,6 +24,11 @@ urlpatterns = [
         'recipes/<int:recipe_id>/shopping_cart/',
         ShoppingCartAPIView.as_view(),
         name='shopping_cart'
+    ),
+    path(
+        'users/<int:author_id>/subscribe/',
+        SubscribeAPIView.as_view(),
+        name='subscription'
     )
 ]
 
