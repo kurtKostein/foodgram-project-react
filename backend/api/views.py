@@ -3,12 +3,14 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 
-from .models import FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag
+from .models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag,
+                     Subscription,)
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateUpdateRecipeSerializer,
                           FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeIngredientsSerializer, RecipeSerializer,
-                          ShoppingCartSerializer, TagSerializer)
+                          ShoppingCartSerializer, SubscriptionSerializer,
+                          TagSerializer,)
 
 
 class TagFilter(filters.FilterSet):  # Todo temporary here
@@ -121,15 +123,15 @@ class FavoriteAPIView(APIView):
 
     def get(self, request, recipe_id):
         user = self.request.user
-        data = {'recipe': recipe_id, 'user': user.id}
+        favorite_data = {'recipe': recipe_id, 'user': user.id}
 
-        if FavoriteRecipe.objects.filter(user=user, recipe=recipe_id).exists():
+        if FavoriteRecipe.objects.filter(**favorite_data).exists():
             return response.Response(
                 "Ошибка: Рецепт уже добавлен", status.HTTP_400_BAD_REQUEST
             )
 
         serializer = FavoriteRecipeSerializer(
-            data=data, context={'request': request}
+            data=favorite_data, context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -147,16 +149,16 @@ class ShoppingCartAPIView(APIView):  # TODO thinking about union with favorite
 
     def get(self, request, recipe_id):
         user = self.request.user
-        data = {'recipe': recipe_id, 'user': user.id}
+        shopping_cart_data = {'recipe': recipe_id, 'user': user.id}
 
-        if ShoppingCart.objects.filter(user=user, recipe=recipe_id).exists():
+        if ShoppingCart.objects.filter(**shopping_cart_data).exists():
             return response.Response(
                 "Ошибка: Рецепт уже добавлен в список покупок",
                 status.HTTP_400_BAD_REQUEST
             )
 
         serializer = ShoppingCartSerializer(
-            data=data, context={'request': request}
+            data=shopping_cart_data, context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -166,4 +168,31 @@ class ShoppingCartAPIView(APIView):  # TODO thinking about union with favorite
         user = self.request.user
         shopping_cart = get_object_or_404(user.shopping_cart, recipe=recipe_id)
         shopping_cart.delete()
+        return response.Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SubscribeAPIView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, author_id):
+        subscriber = self.request.user
+        subscribe_data = {'subscriber': subscriber.id, 'author': author_id}
+
+        if Subscription.objects.filter(**subscribe_data).exists():
+            return response.Response(
+                'Ошибка: Вы уже подписаны на этого пользователя',
+                status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = SubscriptionSerializer(
+            data=subscribe_data, context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return response.Response(serializer.data, status.HTTP_201_CREATED)
+
+    def delete(self, request, author_id):
+        subscriber = self.request.user
+        subscription = get_object_or_404(subscriber.subscribers, author=author_id)
+        subscription.delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
