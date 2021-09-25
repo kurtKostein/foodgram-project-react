@@ -1,5 +1,5 @@
-from rest_framework import mixins, permissions, response, status, viewsets
-from rest_framework.generics import get_object_or_404
+from rest_framework import mixins, permissions, response, status, viewsets, pagination
+from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 
@@ -10,7 +10,7 @@ from .serializers import (CreateUpdateRecipeSerializer,
                           FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeIngredientsSerializer, RecipeSerializer,
                           ShoppingCartSerializer, SubscriptionSerializer,
-                          TagSerializer,)
+                          TagSerializer, )
 
 
 class TagFilter(filters.FilterSet):  # Todo temporary here
@@ -33,7 +33,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         is_favorited = self.request.query_params.get('is_favorited')
         author = self.request.query_params.get('author')
 
-        if author:
+        if author:  # TODO rewrite this to filters
             queryset = queryset.filter(author__recipes=author)
         if is_in_shopping_cart:
             queryset = queryset.filter(shopping_cart__user=user)
@@ -195,4 +195,18 @@ class SubscribeAPIView(APIView):
         subscriber = self.request.user
         subscription = get_object_or_404(subscriber.subscribers, author=author_id)
         subscription.delete()
+
         return response.Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SubscriptionsView(mixins.ListModelMixin, GenericAPIView):
+    queryset = Subscription.objects.all()
+    serializer_class = SubscriptionSerializer
+
+    def get_queryset(self):
+        subscriber = self.request.user
+        queryset = Subscription.objects.filter(subscriber=subscriber)
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)

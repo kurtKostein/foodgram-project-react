@@ -2,8 +2,9 @@ from django.urls import include, path
 from rest_framework import routers
 
 from .views import (IngredientViewSet, RecipeViewSet,
-                    ShoppingCartAPIView, TagViewSet, FavoriteViewSet,
-                    FavoriteAPIView, SubscribeAPIView)
+                    ShoppingCartAPIView,
+                    SubscriptionsView, TagViewSet,
+                    FavoriteAPIView, SubscribeAPIView, )
 
 router = routers.DefaultRouter()
 router.register('ingredients', IngredientViewSet, basename='ingredients')
@@ -29,7 +30,8 @@ urlpatterns = [
         'users/<int:author_id>/subscribe/',
         SubscribeAPIView.as_view(),
         name='subscription'
-    )
+    ),
+    path('users/subscriptions/', SubscriptionsView.as_view(),)
 ]
 
 urlpatterns += router.urls

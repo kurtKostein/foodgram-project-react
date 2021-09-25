@@ -124,50 +124,44 @@ class RecipeMinifiedSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(obj.image.url)
 
 
-class FavoriteRecipeSerializer(serializers.ModelSerializer):
+class UserRecipeRelationsSerializer(serializers.ModelSerializer):
+    """
+    Base serializer for Favorite and ShoppingCart serializers
+    """
     user = serializers.PrimaryKeyRelatedField(
         queryset=CustomUser.objects.all()
     )
     recipe = serializers.PrimaryKeyRelatedField(
         queryset=Recipe.objects.all()
     )
-    # recipe = RecipeMinifiedSerializer()
+
+    class Meta:
+        abstract = True
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        recipes = RecipeMinifiedSerializer(
+            instance.recipe,
+            context={'request': request}
+        )
+        return recipes.data
+
+
+class FavoriteRecipeSerializer(UserRecipeRelationsSerializer):
 
     class Meta:
         model = FavoriteRecipe
         fields = '__all__'
 
-    def to_representation(self, instance):
-        request = self.context.get('request')
-        recipes = RecipeMinifiedSerializer(
-            instance.recipe,
-            context={'request': request}
-        )
-        return recipes.data
 
-
-class ShoppingCartSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all()
-    )
-    recipe = serializers.PrimaryKeyRelatedField(
-        queryset=Recipe.objects.all()
-    )
+class ShoppingCartSerializer(UserRecipeRelationsSerializer):
 
     class Meta:
         model = ShoppingCart
         fields = '__all__'
 
-    def to_representation(self, instance):
-        request = self.context.get('request')
-        recipes = RecipeMinifiedSerializer(
-            instance.recipe,
-            context={'request': request}
-        )
-        return recipes.data
 
-
-class SubscriptionSerializer(serializers.ModelSerializer):
+class SubscriptionSerializer(serializers.ModelSerializer):  # Todo subscriptionS
     subscriber = serializers.PrimaryKeyRelatedField(
         queryset=CustomUser.objects.all()
     )
@@ -181,19 +175,16 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         request = self.context.get('request')
+        recipes_limit = request.query_params.get('recipes_limit')
         author = CustomUserSerializer(
             instance.author, context={'request': request}
         )
         recipes = RecipeMinifiedSerializer(
             many=True,
-            instance=instance.author.recipes.all(),
+            instance=instance.author.recipes.all()[:int(recipes_limit)],
             context={'request': request}
         )
-        # recipes_count = serializers.SerializerMethodField()
-        #
-        # def get_recipes_count():
-        #     return author
-        recipes_count = instance.author.recipes.count()
+        recipes_count = instance.author.recipes.count()  # todo maybe len()?
 
         return {
             **author.data,
