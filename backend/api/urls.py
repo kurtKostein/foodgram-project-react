@@ -12,17 +12,13 @@ router.register('tags', TagViewSet, basename='tags')
 router.register(r'recipes', RecipeViewSet, basename='recipes')
 
 urlpatterns = [
-    # path(
-    #     'recipes/<int:recipe_id>/favorite/',
-    #     FavoriteViewSet.as_view({'get': 'create', 'delete': 'destroy'}),
-    #     name='favorite')
     path(
-        'recipes/<int:recipe_id>/favorite/',
+        'recipes/<int:pk>/favorite/',
         FavoriteAPIView.as_view(),
         name='favorite'
     ),
     path(
-        'recipes/<int:recipe_id>/shopping_cart/',
+        'recipes/<int:pk>/shopping_cart/',
         ShoppingCartAPIView.as_view(),
         name='shopping_cart'
     ),

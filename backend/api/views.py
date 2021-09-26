@@ -1,10 +1,10 @@
-from rest_framework import mixins, permissions, response, status, viewsets, pagination
+from rest_framework import mixins, permissions, response, status, viewsets
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 
 from .models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag,
-                     Subscription,)
+                     Subscription, )
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateUpdateRecipeSerializer,
                           FavoriteRecipeSerializer, IngredientSerializer,
@@ -76,99 +76,47 @@ class RecipeIngredientsViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
 
     def get_queryset(self):
-        pk = self.kwargs.get('recipe_id', )
+        pk = self.kwargs.get('recipe_id')
         recipe = get_object_or_404(Recipe, pk=pk)
         return recipe.ingredients.all()
 
 
-class CreateDestroyViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    pass
-
-
-class FavoriteViewSet(CreateDestroyViewSet):  # Todo delete if apiview
-    pagination_class = None                   # will be stayed
-    serializer_class = FavoriteRecipeSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        return user.favorites.all()
-
-    def create(self, request, *args, **kwargs):
-        recipe = self.kwargs.get('recipe_id')
-        user = self.request.user.id
-        data = {'user': user, 'recipe': recipe}
-        serializer = FavoriteRecipeSerializer(
-            data=data,
-            context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return response.Response(
-            serializer.data,
-            status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    def destroy(self, request, *args, **kwargs):
-        ...
-
-
-class FavoriteAPIView(APIView):
+class GetAsCreateAndDeleteAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
+    Model = None
+    serializer_map = {
+        FavoriteRecipe: FavoriteRecipeSerializer,
+        ShoppingCart: ShoppingCartSerializer
+    }
 
-    def get(self, request, recipe_id):
-        user = self.request.user
-        favorite_data = {'recipe': recipe_id, 'user': user.id}
+    def get(self, request, pk):
+        data = dict(user=self.request.user.id, recipe=pk)
 
-        if FavoriteRecipe.objects.filter(**favorite_data).exists():
+        if self.Model.objects.filter(**data).exists():
             return response.Response(
                 "Ошибка: Рецепт уже добавлен", status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = FavoriteRecipeSerializer(
-            data=favorite_data, context={'request': request}
+        serializer = self.serializer_map.get(self.Model)(
+            data=data, context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return response.Response(serializer.data, status.HTTP_201_CREATED)
 
-    def delete(self, request, recipe_id):
+    def delete(self, request, pk):
         user = self.request.user
-        favorite = get_object_or_404(user.favorites, recipe=recipe_id)
-        favorite.delete()
+        obj = self.Model.objects.get(user=user, recipe=pk)
+        obj.delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ShoppingCartAPIView(APIView):  # TODO thinking about union with favorite
-    permission_classes = (permissions.IsAuthenticated,)
+class FavoriteAPIView(GetAsCreateAndDeleteAPIView):
+    Model = FavoriteRecipe
 
-    def get(self, request, recipe_id):
-        user = self.request.user
-        shopping_cart_data = {'recipe': recipe_id, 'user': user.id}
 
-        if ShoppingCart.objects.filter(**shopping_cart_data).exists():
-            return response.Response(
-                "Ошибка: Рецепт уже добавлен в список покупок",
-                status.HTTP_400_BAD_REQUEST
-            )
-
-        serializer = ShoppingCartSerializer(
-            data=shopping_cart_data, context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return response.Response(serializer.data, status.HTTP_201_CREATED)
-
-    def delete(self, request, recipe_id):
-        user = self.request.user
-        shopping_cart = get_object_or_404(user.shopping_cart, recipe=recipe_id)
-        shopping_cart.delete()
-        return response.Response(status=status.HTTP_204_NO_CONTENT)
+class ShoppingCartAPIView(GetAsCreateAndDeleteAPIView):
+    Model = ShoppingCart
 
 
 class SubscribeAPIView(APIView):
@@ -193,7 +141,8 @@ class SubscribeAPIView(APIView):
 
     def delete(self, request, author_id):
         subscriber = self.request.user
-        subscription = get_object_or_404(subscriber.subscribers, author=author_id)
+        subscription = get_object_or_404(subscriber.subscribers,
+                                         author=author_id)
         subscription.delete()
 
         return response.Response(status=status.HTTP_204_NO_CONTENT)
