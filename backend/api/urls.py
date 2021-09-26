@@ -23,7 +23,7 @@ urlpatterns = [
         name='shopping_cart'
     ),
     path(
-        'users/<int:author_id>/subscribe/',
+        'users/<int:pk>/subscribe/',
         SubscribeAPIView.as_view(),
         name='subscription'
     ),

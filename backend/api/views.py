@@ -82,6 +82,9 @@ class RecipeIngredientsViewSet(viewsets.ModelViewSet):
 
 
 class GetAsCreateAndDeleteAPIView(APIView):
+    """
+    Base View for Favorite and ShoppingCart
+    """
     permission_classes = (permissions.IsAuthenticated,)
     Model = None
     serializer_map = {
@@ -106,7 +109,7 @@ class GetAsCreateAndDeleteAPIView(APIView):
 
     def delete(self, request, pk):
         user = self.request.user
-        obj = self.Model.objects.get(user=user, recipe=pk)
+        obj = get_object_or_404(self.Model, user=user, recipe=pk)
         obj.delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -122,9 +125,9 @@ class ShoppingCartAPIView(GetAsCreateAndDeleteAPIView):
 class SubscribeAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, author_id):
+    def get(self, request, pk):
         subscriber = self.request.user
-        subscribe_data = {'subscriber': subscriber.id, 'author': author_id}
+        subscribe_data = {'subscriber': subscriber.id, 'author': pk}
 
         if Subscription.objects.filter(**subscribe_data).exists():
             return response.Response(
@@ -139,10 +142,11 @@ class SubscribeAPIView(APIView):
         serializer.save()
         return response.Response(serializer.data, status.HTTP_201_CREATED)
 
-    def delete(self, request, author_id):
+    def delete(self, request, pk):
         subscriber = self.request.user
-        subscription = get_object_or_404(subscriber.subscribers,
-                                         author=author_id)
+        subscription = get_object_or_404(
+            Subscription, subscriber=subscriber, author=pk
+        )
         subscription.delete()
 
         return response.Response(status=status.HTTP_204_NO_CONTENT)
