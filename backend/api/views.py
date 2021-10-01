@@ -20,7 +20,6 @@ class TagFilter(filters.FilterSet):  # Todo temporary here
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAuthenticated,)
     filter_class = TagFilter
 
     def get_queryset(self):
