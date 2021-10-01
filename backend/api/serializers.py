@@ -13,17 +13,18 @@ from .models import (
 class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
-    def get_is_subscribed(self, obj) -> bool:  # TODO
-        subscriber = self.context['request'].user
-        author = obj.id
-        is_subscribed = Subscription.objects.filter(
-            subscriber_id=subscriber.id, author_id=author).exists()
-        return is_subscribed
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return Subscription.objects.filter(
+            subscriber=request.user, author=obj
+        ).exists()
 
     class Meta:
         model = CustomUser
         fields = (
-            'email', 'id', 'username',
+            'email', 'username', 'id',
             'first_name', 'last_name', 'is_subscribed'
         )
 
@@ -35,6 +36,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Tag
         fields = '__all__'
@@ -42,15 +44,20 @@ class TagSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
-    ingredients = IngredientSerializer(many=True, read_only=True)
+    ingredients = serializers.SerializerMethodField()
+    # ingredients = RecipeIngredientsSerializer()
     tags = TagSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField()
 
+    def get_ingredients(self, obj):
+        queryset = RecipeIngredients.objects.filter(recipe=obj)
+        return RecipeIngredientsSerializer(instance=queryset, many=True).data
+
     def get_is_favorited(self, obj) -> bool:
         request = self.context.get('request')
-        user = request.user
+        user = request.user.id
         recipe = obj
         return (
             FavoriteRecipe.objects.filter(user=user, recipe=recipe).exists()
@@ -58,7 +65,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj) -> bool:
         request = self.context.get('request')
-        user = request.user
+        user = request.user.id
         recipe = obj
         return (
             ShoppingCart.objects.filter(user=user, recipe=recipe).exists()
@@ -148,20 +155,18 @@ class UserRecipeRelationsSerializer(serializers.ModelSerializer):
 
 
 class FavoriteRecipeSerializer(UserRecipeRelationsSerializer):
-
     class Meta:
         model = FavoriteRecipe
         fields = '__all__'
 
 
 class ShoppingCartSerializer(UserRecipeRelationsSerializer):
-
     class Meta:
         model = ShoppingCart
         fields = '__all__'
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):  # Todo subscriptionS
+class SubscriptionSerializer(serializers.ModelSerializer):
     subscriber = serializers.PrimaryKeyRelatedField(
         queryset=CustomUser.objects.all()
     )
@@ -171,20 +176,25 @@ class SubscriptionSerializer(serializers.ModelSerializer):  # Todo subscriptionS
 
     class Meta:
         model = Subscription
-        fields = '__all__'
+        fields = ('subscriber', 'author')
 
     def to_representation(self, instance):
         request = self.context.get('request')
-        recipes_limit = request.query_params.get('recipes_limit')
+        instance_recipes = instance.author.recipes.all()
+        limit = request.query_params.get('recipes_limit')
+
+        if limit is not None:
+            instance_recipes = instance_recipes[:int(limit)]
+
         author = CustomUserSerializer(
             instance.author, context={'request': request}
         )
         recipes = RecipeMinifiedSerializer(
             many=True,
-            instance=instance.author.recipes.all()[:int(recipes_limit)],
+            instance=instance_recipes,
             context={'request': request}
         )
-        recipes_count = instance.author.recipes.count()  # todo maybe len()?
+        recipes_count = instance.author.recipes.count()
 
         return {
             **author.data,
