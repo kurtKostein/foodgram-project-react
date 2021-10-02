@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
@@ -45,7 +47,6 @@ class TagSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
-    # ingredients = RecipeIngredientsSerializer()
     tags = TagSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -81,10 +82,14 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
 
     class Meta:
         model = RecipeIngredients
-        fields = ('id', 'amount')
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
@@ -101,6 +106,7 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'tags', 'author', 'ingredients',
                   'name', 'image', 'text', 'cooking_time')
 
+    @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         author = self.context.get('request').user
