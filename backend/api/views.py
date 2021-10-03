@@ -1,8 +1,8 @@
 from rest_framework import mixins, permissions, response, status, viewsets
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.views import APIView
-from django_filters import rest_framework as filters
 
+from .filters import RecipeFilter
 from .models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag,
                      Subscription, )
 from .permissions import IsAuthorOrAdminOrReadOnly
@@ -13,37 +13,17 @@ from .serializers import (CreateUpdateRecipeSerializer,
                           TagSerializer, )
 
 
-class TagFilter(filters.FilterSet):  # Todo temporary here
-    tags = filters.AllValuesMultipleFilter(
-        field_name='tags__slug',
-    )
-
-
 class RecipeViewSet(viewsets.ModelViewSet):
-    filter_class = TagFilter
-
-    def get_queryset(self):
-        queryset = Recipe.objects.all()
-        user = self.request.user
-
-        is_in_shopping_cart = self.request.query_params.get(
-            'is_in_shopping_cart'
-        )
-        is_favorited = self.request.query_params.get('is_favorited')
-        author = self.request.query_params.get('author')
-
-        if author:  # TODO rewrite this to filters
-            queryset = queryset.filter(author__recipes=author)
-        if is_in_shopping_cart:
-            queryset = queryset.filter(shopping_cart__user=user)
-        if is_favorited:
-            queryset = queryset.filter(favorites__user=user)
-        return queryset
+    queryset = Recipe.objects.all()
+    filter_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action in ['update', 'create']:
             return CreateUpdateRecipeSerializer
         return RecipeSerializer
+
+    class Meta:
+        ordering = ['-pub_date']
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
