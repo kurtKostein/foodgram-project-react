@@ -52,7 +52,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField()
 
-    def get_ingredients(self, obj):
+    @staticmethod
+    def get_ingredients(obj):
         queryset = RecipeIngredients.objects.filter(recipe=obj)
         return RecipeIngredientsSerializer(instance=queryset, many=True).data
 
@@ -108,18 +109,19 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        tags = validated_data.pop('tags')
         author = self.context.get('request').user
+        tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
 
-        recipe = Recipe.objects.create(
-            author=author, **validated_data)
+        recipe = Recipe.objects.create(author=author, **validated_data)
         recipe.tags.set(tags)
 
         for ingredient in ingredients:
-            curr_ing = get_object_or_404(Ingredient, id=ingredient['id'])
+            current_ing = get_object_or_404(Ingredient, id=ingredient['id'])
             RecipeIngredients.objects.create(
-                recipe=recipe, ingredient=curr_ing, amount=ingredient['amount']
+                recipe=recipe,
+                ingredient=current_ing,
+                amount=ingredient['amount']
             )
 
         return recipe
