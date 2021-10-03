@@ -15,7 +15,7 @@ from .serializers import (CreateUpdateRecipeSerializer,
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    filter_class = RecipeFilter
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action in ['update', 'create']:
