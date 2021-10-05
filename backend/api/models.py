@@ -1,6 +1,6 @@
 #  api/models.py
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 
 from colorfield.fields import ColorField
 
@@ -28,11 +28,37 @@ class Ingredient(BaseRecipeClass):
 
 class Tag(BaseRecipeClass):
     color = ColorField('Цвет тэга', default='#3399FF', null=True, unique=True)
-    slug = models.CharField('Слаг', max_length=200,  null=True, unique=True)
+    slug = models.CharField('Слаг', max_length=200, null=True, unique=True)
 
     class Meta:
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
+
+
+class RecipeManager(models.Manager):
+
+    @staticmethod
+    def _set_ingredients(ingredients, recipe):
+        for ingredient in ingredients:
+            amount = ingredient.get('amount')
+            ingredient = ingredient.get('id')
+            RecipeIngredients.objects.update_or_create(
+                recipe=recipe, ingredient_id=ingredient,
+                defaults={'amount': amount}
+            )
+
+    @transaction.atomic
+    def create(self, author, ingredients, tags, **kwargs):
+        recipe = Recipe(author=author, **kwargs)
+        recipe.save()
+        recipe.tags.set(tags)
+        self._set_ingredients(ingredients, recipe)
+
+        return recipe
+
+    @transaction.atomic
+    def update(self, **validated_data):
+        ...
 
 
 class Recipe(BaseRecipeClass):
@@ -63,6 +89,8 @@ class Recipe(BaseRecipeClass):
         default=1,
         validators=[MinValueValidator(1)]
     )
+
+    objects = RecipeManager()
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -116,7 +144,6 @@ class UserRecipeRelations(models.Model):
 
 
 class FavoriteRecipe(UserRecipeRelations):
-
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
@@ -124,7 +151,6 @@ class FavoriteRecipe(UserRecipeRelations):
 
 
 class ShoppingCart(UserRecipeRelations):
-
     class Meta:
         verbose_name = 'Корзина покупок'
         verbose_name_plural = 'Корзина покупок'
