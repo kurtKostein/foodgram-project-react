@@ -1,14 +1,11 @@
+#  api/serializers.py
 from django.db import transaction
-
+from djoser.serializers import UserSerializer
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from drf_extra_fields.fields import Base64ImageField
-from djoser.serializers import UserSerializer
-
-from .models import (
-    Ingredient, ShoppingCart, Tag, Recipe, RecipeIngredients, FavoriteRecipe,
-    CustomUser, Subscription,
-)
+from .models import (CustomUser, FavoriteRecipe, Ingredient, Recipe,
+                     RecipeIngredients, ShoppingCart, Subscription, Tag)
 
 
 class CustomUserSerializer(UserSerializer):
@@ -50,8 +47,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField()
 
-    @staticmethod
-    def get_ingredients(obj):
+    # noinspection PyMethodMayBeStatic
+    def get_ingredients(self, obj):
         queryset = RecipeIngredients.objects.filter(recipe=obj)
         return RecipeIngredientsSerializer(instance=queryset, many=True).data
 
@@ -118,8 +115,8 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'tags', 'author', 'ingredients',
                   'name', 'image', 'text', 'cooking_time')
 
-    @staticmethod
-    def _set_ingredients(ingredients, recipe):
+    # noinspection PyMethodMayBeStatic
+    def _set_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
             amount = ingredient.get('amount')
             ingredient = ingredient.get('ingredient')
@@ -173,6 +170,9 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeMinifiedSerializer(serializers.ModelSerializer):
+    """
+    Class for minified Recipe representation
+    """
     image = serializers.SerializerMethodField(method_name='get_image')
 
     class Meta:

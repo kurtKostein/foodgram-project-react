@@ -3,14 +3,14 @@ from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.views import APIView
 
 from .filters import RecipeFilter
-from .models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag,
-                     Subscription, )
+from .models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
+                     Subscription, Tag)
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateUpdateRecipeSerializer,
                           FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeIngredientsSerializer, RecipeSerializer,
                           ShoppingCartSerializer, SubscriptionSerializer,
-                          TagSerializer, )
+                          TagSerializer)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
