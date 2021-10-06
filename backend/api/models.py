@@ -1,6 +1,6 @@
 #  api/models.py
 from django.core.validators import MinValueValidator
-from django.db import models, transaction
+from django.db import models
 
 from colorfield.fields import ColorField
 
@@ -35,49 +35,6 @@ class Tag(BaseRecipeClass):
         verbose_name_plural = 'Тэги'
 
 
-class RecipeManager(models.Manager):
-
-    @staticmethod
-    def _set_ingredients(ingredients, recipe):
-        for ingredient in ingredients:
-            amount = ingredient.get('amount')
-            ingredient = ingredient.get('ingredient')
-            RecipeIngredients.objects.update_or_create(
-                recipe=recipe, ingredient_id=ingredient,
-                defaults={'amount': amount}
-            )
-
-    @transaction.atomic
-    def create(self, author, ingredients, tags, **validated_data):
-        recipe = Recipe(author=author, **validated_data)
-        recipe.save()
-        recipe.tags.set(tags)
-        self._set_ingredients(ingredients, recipe)
-
-        return recipe
-
-    # @transaction.atomic
-    # def update(self, instance, validated_data):
-        # instance.name = validated_data.get('name', instance.name)
-        # instance.text = validated_data.get('text', instance.text)
-        # instance.cooking_time = validated_data.get(
-        #     'cooking_time', instance.cooking_time
-        # )
-        # instance.image = validated_data.get('image', instance.image)
-        # instance.save()
-        #
-        # if 'tags' in self.initial.data:
-        #     tags = validated_data.pop('tags')
-        #     instance.tags.set(tags)
-        #
-        # if 'ingredients' in self.initial.data:
-        #     ingredients = validated_data.pop('ingredients')
-        #     instance.ingredients.clear()
-        #     self._set_ingredients(ingredients, instance)
-        #
-        # return instance
-
-
 class Recipe(BaseRecipeClass):
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -106,8 +63,6 @@ class Recipe(BaseRecipeClass):
         default=1,
         validators=[MinValueValidator(1)]
     )
-
-    objects = RecipeManager()
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -178,7 +133,7 @@ class Subscription(models.Model):
     subscriber = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='subscribers'  # TODO check naming!
+        related_name='subscribers'
     )
     author = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,

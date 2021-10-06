@@ -1,7 +1,6 @@
 from django.db import transaction
 
 from rest_framework import serializers
-from rest_framework.generics import get_object_or_404
 
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserSerializer
@@ -56,7 +55,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         queryset = RecipeIngredients.objects.filter(recipe=obj)
         return RecipeIngredientsSerializer(instance=queryset, many=True).data
 
-    def get_is_favorited(self, obj) -> bool:
+    def get_is_favorited(self, obj):
         request = self.context.get('request')
         user = request.user.id
         recipe = obj
@@ -64,7 +63,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             FavoriteRecipe.objects.filter(user=user, recipe=recipe).exists()
         )
 
-    def get_is_in_shopping_cart(self, obj) -> bool:
+    def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         user = request.user.id
         recipe = obj
@@ -119,23 +118,38 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'tags', 'author', 'ingredients',
                   'name', 'image', 'text', 'cooking_time')
 
+    @staticmethod
+    def _set_ingredients(ingredients, recipe):
+        for ingredient in ingredients:
+            amount = ingredient.get('amount')
+            ingredient = ingredient.get('ingredient')
+            RecipeIngredients.objects.update_or_create(
+                recipe=recipe, ingredient_id=ingredient,
+                defaults={'amount': amount}
+            )
+
+    @transaction.atomic
     def create(self, validated_data):
-        return Recipe.objects.create(
-            author=self.context.get('request').user,
-            ingredients=validated_data.pop('ingredients'),
-            tags=validated_data.pop('tags'),
-            **validated_data
-        )
+        author = self.context.get('request').user
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+
+        recipe = Recipe(author=author, **validated_data)
+        recipe.save()
+        recipe.tags.set(tags)
+        self._set_ingredients(ingredients, recipe)
+
+        return recipe
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        # return Recipe.objects.update(validated_data)
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
         instance.cooking_time = validated_data.get(
             'cooking_time', instance.cooking_time
         )
         instance.image = validated_data.get('image', instance.image)
+        instance.save()
 
         if 'tags' in self.initial_data:
             tags = validated_data.pop('tags')
@@ -144,14 +158,7 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
         if 'ingredients' in self.initial_data:
             ingredients = validated_data.pop('ingredients')
             RecipeIngredients.objects.filter(recipe=instance).delete()
-            # self._set_ingredients(ingredients, instance)
-            for ingredient in ingredients:
-                amount = ingredient.get('amount')
-                ingredient = ingredient.get('ingredient')
-                RecipeIngredients.objects.update_or_create(
-                    recipe=instance, ingredient_id=ingredient,
-                    defaults={'amount': amount}
-                )
+            self._set_ingredients(ingredients, instance)
 
         return instance
 
