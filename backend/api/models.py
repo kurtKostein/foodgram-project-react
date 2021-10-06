@@ -41,24 +41,41 @@ class RecipeManager(models.Manager):
     def _set_ingredients(ingredients, recipe):
         for ingredient in ingredients:
             amount = ingredient.get('amount')
-            ingredient = ingredient.get('id')
+            ingredient = ingredient.get('ingredient')
             RecipeIngredients.objects.update_or_create(
                 recipe=recipe, ingredient_id=ingredient,
                 defaults={'amount': amount}
             )
 
     @transaction.atomic
-    def create(self, author, ingredients, tags, **kwargs):
-        recipe = Recipe(author=author, **kwargs)
+    def create(self, author, ingredients, tags, **validated_data):
+        recipe = Recipe(author=author, **validated_data)
         recipe.save()
         recipe.tags.set(tags)
         self._set_ingredients(ingredients, recipe)
 
         return recipe
 
-    @transaction.atomic
-    def update(self, **validated_data):
-        ...
+    # @transaction.atomic
+    # def update(self, instance, validated_data):
+        # instance.name = validated_data.get('name', instance.name)
+        # instance.text = validated_data.get('text', instance.text)
+        # instance.cooking_time = validated_data.get(
+        #     'cooking_time', instance.cooking_time
+        # )
+        # instance.image = validated_data.get('image', instance.image)
+        # instance.save()
+        #
+        # if 'tags' in self.initial.data:
+        #     tags = validated_data.pop('tags')
+        #     instance.tags.set(tags)
+        #
+        # if 'ingredients' in self.initial.data:
+        #     ingredients = validated_data.pop('ingredients')
+        #     instance.ingredients.clear()
+        #     self._set_ingredients(ingredients, instance)
+        #
+        # return instance
 
 
 class Recipe(BaseRecipeClass):
