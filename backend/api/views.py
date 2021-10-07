@@ -65,7 +65,6 @@ class GetAsCreateAndDeleteAPIView(APIView):
     Base View for Favorite and ShoppingCart
     """
     permission_classes = (permissions.IsAuthenticated,)
-    Model = None
     serializer_map = {
         FavoriteRecipe: FavoriteRecipeSerializer,
         ShoppingCart: ShoppingCartSerializer
@@ -74,12 +73,12 @@ class GetAsCreateAndDeleteAPIView(APIView):
     def get(self, request, pk):
         data = dict(user=self.request.user.id, recipe=pk)
 
-        if self.Model.objects.filter(**data).exists():
+        if self.Meta.model.objects.filter(**data).exists():
             return response.Response(
                 "Ошибка: Рецепт уже добавлен", status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = self.serializer_map.get(self.Model)(
+        serializer = self.Meta.serializer_class(
             data=data, context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
@@ -88,17 +87,28 @@ class GetAsCreateAndDeleteAPIView(APIView):
 
     def delete(self, request, pk):
         user = self.request.user
-        obj = get_object_or_404(self.Model, user=user, recipe=pk)
+        obj = get_object_or_404(self.Meta.model, user=user, recipe=pk)
         obj.delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
 
+    class Meta:
+        model = None
+        serializer_class = None
+        abstract = True
+
 
 class FavoriteAPIView(GetAsCreateAndDeleteAPIView):
-    Model = FavoriteRecipe
+
+    class Meta:
+        model = FavoriteRecipe
+        serializer_class = FavoriteRecipeSerializer
 
 
 class ShoppingCartAPIView(GetAsCreateAndDeleteAPIView):
-    Model = ShoppingCart
+
+    class Meta:
+        serializer_class = ShoppingCartSerializer
+        model = ShoppingCart
 
 
 class SubscribeAPIView(APIView):
@@ -106,16 +116,16 @@ class SubscribeAPIView(APIView):
 
     def get(self, request, pk):
         subscriber = self.request.user
-        subscribe_data = {'subscriber': subscriber.id, 'author': pk}
+        data = dict(subscriber=subscriber.id, author=pk)
 
-        if Subscription.objects.filter(**subscribe_data).exists():
+        if Subscription.objects.filter(**data).exists():
             return response.Response(
                 'Ошибка: Вы уже подписаны на этого пользователя',
                 status.HTTP_400_BAD_REQUEST
             )
 
         serializer = SubscriptionSerializer(
-            data=subscribe_data, context={'request': request}
+            data=data, context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
