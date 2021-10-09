@@ -19,6 +19,9 @@ from .serializers import (CreateUpdateRecipeSerializer,
 
 
 class TagFilter(django_filters.FilterSet):
+    """
+    Filtering against query parameters tags
+    """
     tags = django_filters.AllValuesMultipleFilter(
         field_name='tags__slug',
     )
@@ -189,7 +192,7 @@ class SubscriptionsView(mixins.ListModelMixin, GenericAPIView):
     def get_queryset(self):
         subscriber = self.request.user
         queryset = Subscription.objects.filter(subscriber=subscriber)
-        return queryset
+        return queryset.order_by('-id',)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
