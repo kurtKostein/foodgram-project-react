@@ -1,4 +1,5 @@
 #  api/views.py
+import django_filters
 from django.db.models import Sum
 from django.shortcuts import HttpResponse
 from django.utils import timezone
@@ -17,7 +18,14 @@ from .serializers import (CreateUpdateRecipeSerializer,
                           TagSerializer)
 
 
+class TagFilter(django_filters.FilterSet):
+    tags = django_filters.AllValuesMultipleFilter(
+        field_name='tags__slug',
+    )
+
+
 class RecipeViewSet(viewsets.ModelViewSet):
+    filterset_class = TagFilter
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
@@ -78,7 +86,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAuthorOrAdminOrReadOnly,)
 
 
 class RecipeIngredientsViewSet(viewsets.ModelViewSet):
@@ -176,6 +184,7 @@ class SubscribeAPIView(APIView):
 class SubscriptionsView(mixins.ListModelMixin, GenericAPIView):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         subscriber = self.request.user
