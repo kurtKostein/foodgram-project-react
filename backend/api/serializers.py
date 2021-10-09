@@ -46,6 +46,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField()
+    cooking_time = serializers.IntegerField(min_value=1)
 
     # noinspection PyMethodMayBeStatic
     def get_ingredients(self, obj):
@@ -80,7 +81,7 @@ class RecipeIngredientsSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
     )
-    amount = serializers.IntegerField()
+    amount = serializers.IntegerField(min_value=1)
 
     class Meta:
         model = RecipeIngredients
@@ -123,6 +124,11 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
                     recipe=recipe, ingredient=ingredient
             ).exists():
                 amount += F('amount')
+
+            if amount < 1:
+                raise serializers.ValidationError(
+                    'Значение не может быть меньше 1'
+                )
 
             RecipeIngredients.objects.update_or_create(
                 recipe=recipe, ingredient_id=ingredient,

@@ -4,7 +4,6 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from foodgram import settings
-from users.models import CustomUser
 
 
 class BaseRecipeClass(models.Model):
@@ -94,7 +93,7 @@ class UserRecipeRelations(models.Model):
     Base class for Favorite and ShoppingCart models
     """
     user = models.ForeignKey(
-        to='users.CustomUser',
+        settings.AUTH_USER_MODEL,
         verbose_name='Пользователь',
         on_delete=models.CASCADE,
     )

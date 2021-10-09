@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 
-import rest_framework.permissions
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'DEFAULT')
