@@ -1,11 +1,14 @@
 #  api/serializers.py
 from django.db import transaction
+from django.db.models import F
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from .models import (CustomUser, FavoriteRecipe, Ingredient, Recipe,
-                     RecipeIngredients, ShoppingCart, Subscription, Tag)
+from .models import (
+    CustomUser, FavoriteRecipe, Ingredient, Recipe, RecipeIngredients,
+    ShoppingCart, Subscription, Tag,
+)
 
 
 class CustomUserSerializer(UserSerializer):
@@ -117,6 +120,12 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
         for ingredient in ingredients:
             amount = ingredient.get('amount')
             ingredient = ingredient.get('ingredient')
+
+            if RecipeIngredients.objects.filter(
+                    recipe=recipe, ingredient=ingredient
+            ).exists():
+                amount += F('amount')
+
             RecipeIngredients.objects.update_or_create(
                 recipe=recipe, ingredient_id=ingredient,
                 defaults={'amount': amount}
