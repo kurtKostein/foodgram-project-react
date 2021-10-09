@@ -1,29 +1,65 @@
+#  api/views.py
+from django.db.models import Sum
+from django.shortcuts import HttpResponse
+from django.utils import timezone
 from rest_framework import mixins, permissions, response, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.views import APIView
 
-from .filters import RecipeFilter
-from .models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
-                     Subscription, Tag)
+from .models import (
+    FavoriteRecipe, Ingredient, Recipe, RecipeIngredients, ShoppingCart,
+    Subscription, Tag,
+)
 from .permissions import IsAuthorOrAdminOrReadOnly
-from .serializers import (CreateUpdateRecipeSerializer,
-                          FavoriteRecipeSerializer, IngredientSerializer,
-                          RecipeIngredientsSerializer, RecipeSerializer,
-                          ShoppingCartSerializer, SubscriptionSerializer,
-                          TagSerializer)
+from .serializers import (
+    CreateUpdateRecipeSerializer, FavoriteRecipeSerializer,
+    IngredientSerializer, RecipeIngredientsSerializer, RecipeSerializer,
+    ShoppingCartSerializer, SubscriptionSerializer, TagSerializer,
+)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
-    filterset_class = RecipeFilter
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        queryset = Recipe.objects.all()
+        user = self.request.user
+        is_favorited = self.request.query_params.get('is_favorited')
+        is_in_shopping = self.request.query_params.get('is_in_shopping')
+        author = self.request.query_params.get('author')
+
+        if is_favorited is not None:
+            queryset = queryset.filter(favorites__user=user)
+
+        if is_in_shopping is not None:
+            queryset = queryset.filter(shopping_cart__user=user)
+
+        if author is not None:
+            queryset = queryset.filter(author=author)
+
+        return queryset.order_by('-id')
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PUT', 'PATCH'):
             return CreateUpdateRecipeSerializer
         return RecipeSerializer
 
-    class Meta:
-        ordering = ['-pub_date']
+    @action(detail=False, permission_classes=(IsAuthorOrAdminOrReadOnly,))
+    def download_shopping_cart(self, request):
+        user = request.user
+        cart = RecipeIngredients.objects.filter(
+            recipe__shopping_cart__user=user
+        ).annotate(_amount=Sum('amount')).values_list(
+            'ingredient__name', '_amount', 'ingredient__measurement_unit',
+        )
+        data = [f'Список покупок на {timezone.now().date()}\n\n']
+        for item in cart:
+            data.append(f'{item[0]}: {item[1]}{item[2]}\n')
+        return HttpResponse(data, {
+            'content_type': 'text/plain',
+            'Content-Disposition': 'attachment; filename="shopping_list.txt"'
+        })
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -35,9 +71,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Ingredient.objects.all()
 
         if name:
-            queryset = queryset.filter(
-                name__istartswith=name
-            ).distinct('name')
+            queryset = queryset.filter(name__istartswith=name).distinct('name')
 
         return queryset
 
