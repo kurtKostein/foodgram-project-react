@@ -7,16 +7,14 @@ from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.views import APIView
 
-from .models import (
-    FavoriteRecipe, Ingredient, Recipe, RecipeIngredients, ShoppingCart,
-    Subscription, Tag,
-)
+from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredients,
+                     ShoppingCart, Subscription, Tag)
 from .permissions import IsAuthorOrAdminOrReadOnly
-from .serializers import (
-    CreateUpdateRecipeSerializer, FavoriteRecipeSerializer,
-    IngredientSerializer, RecipeIngredientsSerializer, RecipeSerializer,
-    ShoppingCartSerializer, SubscriptionSerializer, TagSerializer,
-)
+from .serializers import (CreateUpdateRecipeSerializer,
+                          FavoriteRecipeSerializer, IngredientSerializer,
+                          RecipeIngredientsSerializer, RecipeSerializer,
+                          ShoppingCartSerializer, SubscriptionSerializer,
+                          TagSerializer)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -26,7 +24,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         queryset = Recipe.objects.all()
         user = self.request.user
         is_favorited = self.request.query_params.get('is_favorited')
-        is_in_shopping = self.request.query_params.get('is_in_shopping')
+        is_in_shopping = self.request.query_params.get('is_in_shopping_cart')
         author = self.request.query_params.get('author')
 
         if is_favorited is not None:
