@@ -182,7 +182,7 @@ class CreateUpdateRecipeSerializer(serializers.ModelSerializer):
 
 class RecipeMinifiedSerializer(serializers.ModelSerializer):
     """
-    Class for minified Recipe representation
+    Class for minified Recipe representation.
     """
     image = serializers.SerializerMethodField(method_name='get_image')
 
@@ -191,13 +191,13 @@ class RecipeMinifiedSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time',)
 
     def get_image(self, obj):
-        request = self.context.get("request")
+        request = self.context.get('request')
         return request.build_absolute_uri(obj.image.url)
 
 
 class UserRecipeRelationsSerializer(serializers.ModelSerializer):
     """
-    Base serializer for Favorite and ShoppingCart serializers
+    Base serializer for Favorite and ShoppingCart serializers.
     """
     user = serializers.PrimaryKeyRelatedField(
         queryset=CustomUser.objects.all()
