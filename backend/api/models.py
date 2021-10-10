@@ -26,7 +26,7 @@ class Ingredient(BaseRecipeClass):
 
 class Tag(BaseRecipeClass):
     color = ColorField('Цвет тэга', default='#3399FF', null=True, unique=True)
-    slug = models.CharField('Слаг', max_length=200, null=True, unique=True)
+    slug = models.CharField('Слаг', max_length=50, null=True, unique=True)
 
     class Meta:
         verbose_name = 'Тэг'
@@ -59,7 +59,9 @@ class Recipe(BaseRecipeClass):
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления (в минутах)',
         default=1,
-        validators=[MinValueValidator(1)]
+        validators=[
+            MinValueValidator(1, message='Значение не может быть меньше 1')
+        ]
     )
 
     class Meta:
@@ -80,7 +82,9 @@ class RecipeIngredients(models.Model):
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
         default=1,
-        validators=[MinValueValidator(1)]
+        validators=[
+            MinValueValidator(1, message='Значение не может быть меньше 1')
+        ]
     )
 
     class Meta:
@@ -104,12 +108,12 @@ class UserRecipeRelations(models.Model):
     )
 
     class Meta:
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=['user', 'recipe'],
+                fields=('user', 'recipe'),
                 name='%(app_label)s_%(class)s_is_unique'
-            )
-        ]
+            ),
+        )
         abstract = True
 
 
@@ -142,7 +146,7 @@ class Subscription(models.Model):
     class Meta:
         verbose_name = 'Подписки'
         verbose_name_plural = 'Подписки'
-        constraints = [
-            models.UniqueConstraint(fields=['subscriber', 'author'],
-                                    name='unique_subscriptions')
-        ]
+        constraints = (
+            models.UniqueConstraint(fields=('subscriber', 'author'),
+                                    name='unique_subscriptions'),
+        )
