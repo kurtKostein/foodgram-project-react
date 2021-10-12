@@ -91,6 +91,9 @@ class RecipeIngredients(models.Model):
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
 
+        def __str__(self):
+            return self.verbose_name
+
 
 class UserRecipeRelations(models.Model):
     """
@@ -116,6 +119,10 @@ class UserRecipeRelations(models.Model):
         )
         abstract = True
 
+    def __str__(self):
+        return (f'{self._meta.verbose_name} пользователя {self.user} '
+                f'рецепт: {self.recipe.name}')
+
 
 class FavoriteRecipe(UserRecipeRelations):
     class Meta:
@@ -133,20 +140,25 @@ class ShoppingCart(UserRecipeRelations):
 
 class Subscription(models.Model):
     subscriber = models.ForeignKey(
+        verbose_name='Подписчик',
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='subscribers'
     )
     author = models.ForeignKey(
+        verbose_name='Автор рецепта',
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='subscription'
     )
 
     class Meta:
-        verbose_name = 'Подписки'
+        verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         constraints = (
             models.UniqueConstraint(fields=('subscriber', 'author'),
                                     name='unique_subscriptions'),
         )
+
+    def __str__(self):
+        return f'{self._meta.verbose_name} {self.subscriber} на {self.author}'
