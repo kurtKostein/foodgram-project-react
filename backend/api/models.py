@@ -5,6 +5,16 @@ from django.db import models
 
 from foodgram import settings
 
+measurement_unit_list = [
+    (1, 'л'), (2, 'бутылка'), (3, 'зубчик'), (4, 'щепотка'), (5, 'пачка'),
+    (6, 'пучок'), (7, 'банка'), (8, 'веточка'), (9, 'стакан'), (10, 'стручок'),
+    (11, 'шт.'), (12, 'пласт'), (13, 'звездочка'), (14, 'кг'), (15, 'тушка'),
+    (16, 'батон'), (17, 'упаковка'), (18, 'мл'), (19, 'пакетик'), (20, 'г'),
+    (21, 'горсть'), (22, 'кусок'), (23, 'по вкусу'), (24, 'г.'),
+    (25, 'стебель'), (26, 'ст. л.'), (27, 'капля'), (28, 'пакет'),
+    (29, 'долька'), (30, 'ч. л.'), (31, 'лист'),
+]
+
 
 class BaseRecipeClass(models.Model):
     name = models.CharField(verbose_name='Название', max_length=200)
@@ -17,7 +27,8 @@ class BaseRecipeClass(models.Model):
 
 
 class Ingredient(BaseRecipeClass):
-    measurement_unit = models.CharField('Ед. измерения', max_length=200)
+    measurement_unit = models.CharField('Ед. измерения', max_length=200,
+                                        choices=measurement_unit_list)
 
     class Meta:
         verbose_name = 'Ингредиент'
