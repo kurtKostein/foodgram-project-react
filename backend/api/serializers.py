@@ -69,11 +69,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(min_value=1)
 
-    # noinspection PyMethodMayBeStatic
-    def get_ingredients(self, obj):
-        queryset = RecipeIngredients.objects.filter(recipe=obj)
-        return RecipeIngredientsSerializer(instance=queryset, many=True).data
-
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
