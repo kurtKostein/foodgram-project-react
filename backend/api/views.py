@@ -11,8 +11,7 @@ from rest_framework.views import APIView
 from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredients,
                      ShoppingCart, Subscription, Tag)
 from .permissions import IsAuthorOrAdminOrReadOnly
-from .serializers import (CreateUpdateRecipeSerializer,
-                          FavoriteRecipeSerializer, IngredientSerializer,
+from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeIngredientsSerializer, RecipeSerializer,
                           ShoppingCartSerializer, SubscriptionSerializer,
                           TagSerializer)
@@ -28,6 +27,7 @@ class TagFilter(django_filters.FilterSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    serializer_class = RecipeSerializer
     filterset_class = TagFilter
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
@@ -48,11 +48,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(author=author)
 
         return queryset.order_by('-id')
-
-    def get_serializer_class(self):
-        if self.request.method in ('POST', 'PUT', 'PATCH'):
-            return CreateUpdateRecipeSerializer
-        return RecipeSerializer
 
     @action(detail=False, permission_classes=(IsAuthorOrAdminOrReadOnly,))
     def download_shopping_cart(self, request):
