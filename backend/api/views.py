@@ -118,7 +118,7 @@ class GetAsCreateAndDeleteAPIView(APIView):
 
         if self.Meta.model.objects.filter(**data).exists():
             return response.Response(
-                "Ошибка: Рецепт уже добавлен", status.HTTP_400_BAD_REQUEST
+                'Ошибка: Рецепт уже добавлен', status.HTTP_400_BAD_REQUEST
             )
 
         serializer = self.Meta.serializer_class(

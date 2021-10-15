@@ -6,10 +6,10 @@ from .views import (FavoriteAPIView, IngredientViewSet, RecipeViewSet,
                     ShoppingCartAPIView, SubscribeAPIView, SubscriptionsView,
                     TagViewSet)
 
-router = routers.DefaultRouter()
-router.register('ingredients', IngredientViewSet, basename='ingredients')
-router.register('tags', TagViewSet, basename='tags')
-router.register('recipes', RecipeViewSet, basename='recipes')
+router_v1 = routers.DefaultRouter()
+router_v1.register('ingredients', IngredientViewSet, basename='ingredients')
+router_v1.register('tags', TagViewSet, basename='tags')
+router_v1.register('recipes', RecipeViewSet, basename='recipes')
 
 urlpatterns = [
     path(
@@ -30,4 +30,4 @@ urlpatterns = [
     path('users/subscriptions/', SubscriptionsView.as_view(),)
 ]
 
-urlpatterns += router.urls
+urlpatterns += router_v1.urls

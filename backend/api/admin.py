@@ -1,58 +1,49 @@
 from django.contrib import admin
 
-from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredients,
-                     ShoppingCart, Subscription, Tag)
+from .models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
+                     Subscription, Tag)
 
 
+class TagInlines(admin.TabularInline):
+    model = Recipe.tags.through
+    verbose_name = 'Тэг рецепта'
+    verbose_name_plural = 'Тэги рецепта'
+    extra = 1
+
+
+class RecipeIngredientsInline(admin.TabularInline):
+    model = Recipe.ingredients.through
+    fields = ('ingredient', 'amount')
+    extra = 1
+
+
+@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    model = Ingredient
-    list_display = ('name', 'measurement_unit')
+    fields = ('name', 'measurement_unit')
     list_filter = ('name',)
     search_fields = ('^name',)
 
 
-class RecipeIngredientsInline(admin.TabularInline):
-    model = RecipeIngredients
+@admin.register(ShoppingCart, Subscription)
+class UserToUserRelationsAdmin(admin.ModelAdmin):
+    pass
 
 
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    model = Recipe
-    list_display = ('name', 'author', 'favorited')
-    list_filter = ('name', 'author', 'tags')
-    exclude = ('ingredients',)
+    list_display = ('name', 'author', 'cooking_time', 'favorited')
+    list_filter = ('name', 'author')
+    exclude = ('tags',)
 
-    inlines = (RecipeIngredientsInline,)
+    inlines = (TagInlines, RecipeIngredientsInline)
 
+    # noinspection PyMethodMayBeStatic
     def favorited(self, obj):
-        favorited_count = FavoriteRecipe.objects.filter(recipe=obj).count()
-        return favorited_count
+        return FavoriteRecipe.objects.filter(recipe=obj).count()
 
     favorited.short_description = 'В избранном'
-
-
-class TagAdmin(admin.ModelAdmin):
-    model = Tag
-    list_display = ('name', 'color', 'slug')
-
-
-class ShoppingCartAdmin(admin.ModelAdmin):
-    model = ShoppingCart
-    list_display = ('user', 'recipe')
-
-
-class FavoriteRecipeAdmin(admin.ModelAdmin):
-    model = FavoriteRecipe
-    list_display = ('user', 'recipe')
-
-
-class SubscriptionAdmin(admin.ModelAdmin):
-    model = Subscription
-    list_display = ('author', 'subscriber')
-
-
-admin.site.register(Ingredient, IngredientAdmin)
-admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Tag, TagAdmin)
-admin.site.register(ShoppingCart, ShoppingCartAdmin)
-admin.site.register(FavoriteRecipe, FavoriteRecipeAdmin)
-admin.site.register(Subscription, SubscriptionAdmin)
