@@ -18,7 +18,9 @@ services:
       - ../frontend/:/app/result_build/
 
   backend:
-    image: kostein/foodgram:latest
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
     restart: always
     volumes:
       - static_value:/code/static/
