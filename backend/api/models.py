@@ -67,7 +67,7 @@ class Recipe(BaseRecipeClass):
     )
     image = models.ImageField(
         verbose_name='Изображение',
-        upload_to='media'
+        upload_to='recipe_images'
     )
     text = models.TextField(verbose_name='Описание рецепта')
     cooking_time = models.PositiveSmallIntegerField(
