@@ -28,7 +28,7 @@ jobs:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     needs: tests
-    if: ${{ false }}
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
@@ -50,8 +50,19 @@ jobs:
     name: Deploy and write .env
     runs-on: ubuntu-latest
     needs: build_and_push_to_docker_hub
-    if: ${{ false }}
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     steps:
+      - uses: actions/checkout@master
+      - name: copy files via scp
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          source:  "infra/docker-compose.yaml, infra/nginx/default.conf"
+          target: .
+
       - name: executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
