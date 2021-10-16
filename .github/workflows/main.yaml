@@ -72,8 +72,9 @@ jobs:
           script: |
             # Выполняет pull образа с DockerHub
             sudo docker pull kostein/foodgram:latest
-            sudo infra/docker-compose stop
-            sudo infra/docker-compose rm backend
+            cd infra/
+            sudo docker-compose stop
+            sudo docker-compose rm backend
             # Создаст файл для переменных окружения
             touch .env
             # Наполнит файл переменными окружения из секретов GitHub
