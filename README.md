@@ -1,7 +1,7 @@
 ## Учебный проект в рамках программы "python web-developer" курсов <span style="color:red">Y</span><span style="color:yellow">andex-Praktikum</span>
 ![example workflow](https://github.com/kurtKostein/foodgram-project-react/actions/workflows/main.yaml/badge.svg)
 
-[пример работающего проекта](http://62.84.121.130/recipes)
+####[пример работающего проекта](http://62.84.121.130/recipes)
 
 Администратор сайта:
 
@@ -26,23 +26,23 @@
 ### Запуск проекта на локальной машине.
 
 - Клонировать репозиторий, перейти в директорию *infra* и запустить контейнеры:
-```bash
+```
 > git clone https://github.com/kurtKostein/foodgram-project-react.git
 ```
 
 - В директории *backend* создать файл _.env_ и наполнить его содержимым по анологии с файлом _.env.example_.
-```bash
+```
 > cd infra
 > docker-compose up
 ```
 - Далее, провести миграции, создать суперпользователя, собрать статику:
-```bash
+```
 > docker-compose exec <<название контейнера>> python manage.py migrate --noinput
 > docker-compose exec <<название контейнера>> python manage.py createsuperuser
 > docker-compose exec <<название контейнера>> python manage.py collectstatic --no-input  
 ```
 - Загрузить данные из директории *data*:
-```bash
+```
 > cat <<fixture_name.json>> | sudo docker exec -i <<container_name_or_id>> python manage.py loaddata --format=json -
 ```
 
