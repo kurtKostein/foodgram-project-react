@@ -8,12 +8,10 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
-      - /.env
+      - .env
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: kostein/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
 
@@ -26,7 +24,7 @@ services:
     depends_on:
       - db
     env_file:
-      - /.env
+      - .env
 
   nginx:
     image: nginx:1.19.3
