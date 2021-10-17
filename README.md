@@ -1,8 +1,6 @@
 ## Учебный проект в рамках программы "python web-developer" курсов <span style="color:red">Y</span><span style="color:yellow">andex-Praktikum</span>
 ![example workflow](https://github.com/kurtKostein/foodgram-project-react/actions/workflows/main.yaml/badge.svg)
 
-!![парам-пам-пам](https://cs12.pikabu.ru/post_img/big/2020/08/24/3/1598236717197322430.png)
-
 [пример работающего проекта](http://62.84.121.130/recipes)
 
 Администратор сайта:
@@ -51,3 +49,5 @@
 Для локальной работы над проектом, в файле [docker-compose.override.yml](infra/docker-compose.override.yml) 
 переопределены некоторые директивы, например применена сборка контейнера вместо его загрузки 
 с **DockerHub**, используется _local_nginx.conf_ вместо _nginx.conf_, а так же иное расположение _.env_ файла.
+
+![парам-пам-пам](https://cs12.pikabu.ru/post_img/big/2020/08/24/3/1598236717197322430.png)
