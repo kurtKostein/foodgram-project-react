@@ -1,5 +1,4 @@
-## Дипломный проект в рамках программы
-## python web-developer от <span style="color:red">Y</span><span style="color:yellow">andex-Praktikum</span>
+## Дипломный проект в рамках программы python web-developer от <span style="color:red">Y</span><span style="color:yellow">andex-Praktikum</span>
 
 ![example workflow](https://github.com/kurtKostein/foodgram-project-react/actions/workflows/main.yaml/badge.svg)
 
