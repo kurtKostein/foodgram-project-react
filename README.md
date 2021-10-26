@@ -2,7 +2,7 @@
 
 ![example workflow](https://github.com/kurtKostein/foodgram-project-react/actions/workflows/main.yaml/badge.svg)
 
-#### [пример работающего проекта](http://62.84.121.130/recipes)
+####[пример работающего проекта](http://178.154.194.14/recipes)
 
 ![парам-пам-пам](https://cs12.pikabu.ru/post_img/big/2020/08/24/3/1598236717197322430.png)
 
