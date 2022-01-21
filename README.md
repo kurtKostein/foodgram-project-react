@@ -4,17 +4,6 @@
 
 ![парам-пам-пам](https://cs12.pikabu.ru/post_img/big/2020/08/24/3/1598236717197322430.png)
 
-Администратор сайта:
-
-- логин: `foodgram@foodgram.com`
-- пароль: `passforfoodgram`
-
-
-  Пользователь Гордон Рамси:
-
-- логин: `gordon@ramsey.com`
-- пароль: `passforgordon`
-
 ### Применнённые в проекте решения:
 Адаптированная к проекту модель пользователя взята из статьи [Customizing Django Authentication using AbstractBaseUser](https://dev.to/joshwizzy/customizing-django-authentication-using-abstractbaseuser-llg).
 
